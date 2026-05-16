@@ -287,6 +287,52 @@ body {
   box-shadow: var(--shadow-premium);
 }
 
+.prominent-toggle {
+  margin-bottom: 2.5rem !important;
+  background: #f8fafc;
+  padding: 1.25rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--card-border);
+}
+
+.prominent-toggle label {
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+  display: block;
+  text-align: center;
+}
+
+.buttons.full-width {
+  width: 100%;
+}
+
+.buttons.full-width button {
+  flex: 1;
+}
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.highlight-input {
+  background: #f0fdf4;
+  padding: 1.25rem;
+  border-radius: 0.75rem;
+  border: 1px solid #bbf7d0;
+  margin: 1.5rem 0;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* Input/Output Grid */
 .content-grid {
   display: grid;
@@ -332,6 +378,47 @@ body {
   outline: none;
   border-color: var(--accent-color);
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.label-with-value {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.6rem;
+}
+
+.label-with-value label {
+  margin-bottom: 0;
+}
+
+.inline-value {
+  font-weight: 800;
+  color: var(--accent-color);
+  font-size: 0.9rem;
+}
+
+.step-up-slider {
+  width: 100%;
+  margin: 0.5rem 0;
+  cursor: pointer;
+}
+
+.input-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 0.4rem 0 0;
+}
+
+.step-up-subtext {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent-dark);
+  margin-top: 0.25rem;
+}
+
+.value-group {
+  text-align: right;
 }
 
 /* Result Visualization Styling */

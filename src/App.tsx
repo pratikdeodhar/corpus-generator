@@ -8,7 +8,7 @@ import { logEvent } from './utils/supabase';
 
 function App() {
   const [mode, setMode] = useState<'projection' | 'goal'>('projection');
-  const [currency, setCurrency] = useState<'INR' | 'USD'>('INR');
+  const [currency, setCurrency] = useState<'INR' | 'USD'>('USD');
   const [status, setStatus] = useState<'starting' | 'invested'>('starting');
   const [formData, setFormData] = useState({
     age: 0,
@@ -16,10 +16,53 @@ function App() {
     years: 0,
     existingAmount: 0,
     inflation: 6,
+    stepUp: 10,
     targetCorpus: 0,
   });
 
   const timerRef = useRef<number | null>(null);
+  const isInitialLoad = useRef(true);
+
+  // Initialize from URL Params
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    
+    if (params.has('mode')) setMode(params.get('mode') as any);
+    if (params.has('cur')) setCurrency(params.get('cur') as any);
+    if (params.has('st')) setStatus(params.get('st') as any);
+    
+    const newFormData = { ...formData };
+    if (params.has('age')) newFormData.age = Number(params.get('age'));
+    if (params.has('ma')) newFormData.monthlyAmount = Number(params.get('ma'));
+    if (params.has('y')) newFormData.years = Number(params.get('y'));
+    if (params.has('ea')) newFormData.existingAmount = Number(params.get('ea'));
+    if (params.has('inf')) newFormData.inflation = Number(params.get('inf'));
+    if (params.has('su')) newFormData.stepUp = Number(params.get('su'));
+    if (params.has('tc')) newFormData.targetCorpus = Number(params.get('tc'));
+    
+    setFormData(newFormData);
+    isInitialLoad.current = false;
+  }, []);
+
+  // Update URL Params when data changes
+  useEffect(() => {
+    if (isInitialLoad.current) return;
+
+    const params = new URLSearchParams();
+    params.set('mode', mode);
+    params.set('cur', currency);
+    params.set('st', status);
+    params.set('age', formData.age.toString());
+    params.set('ma', formData.monthlyAmount.toString());
+    params.set('y', formData.years.toString());
+    params.set('ea', formData.existingAmount.toString());
+    params.set('inf', formData.inflation.toString());
+    params.set('su', formData.stepUp.toString());
+    params.set('tc', formData.targetCorpus.toString());
+
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    window.history.replaceState({}, '', newUrl);
+  }, [formData, mode, currency, status]);
 
   // Track Page View
   useEffect(() => {
@@ -63,11 +106,13 @@ function App() {
       years: 0,
       existingAmount: 0,
       inflation: 6,
+      stepUp: 10,
       targetCorpus: 0,
     });
     setMode('projection');
-    setCurrency('INR');
+    setCurrency('USD');
     setStatus('starting');
+    window.history.replaceState({}, '', window.location.pathname);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -119,15 +164,8 @@ function App() {
             <div className="toggle-group">
               <label>Currency</label>
               <div className="buttons">
-                <button className={currency === 'INR' ? 'active' : ''} onClick={() => setCurrency('INR')}>INR (₹)</button>
                 <button className={currency === 'USD' ? 'active' : ''} onClick={() => setCurrency('USD')}>USD ($)</button>
-              </div>
-            </div>
-            <div className="toggle-group">
-              <label>Starting Point</label>
-              <div className="buttons">
-                <button className={status === 'starting' ? 'active' : ''} onClick={() => setStatus('starting')}>Fresh Start</button>
-                <button className={status === 'invested' ? 'active' : ''} onClick={() => setStatus('invested')}>Already Invested</button>
+                <button className={currency === 'INR' ? 'active' : ''} onClick={() => setCurrency('INR')}>INR (₹)</button>
               </div>
             </div>
           </div>
@@ -138,6 +176,7 @@ function App() {
                 mode={mode}
                 currency={currency}
                 status={status}
+                setStatus={setStatus}
                 {...formData}
                 onChange={handleInputChange}
               />

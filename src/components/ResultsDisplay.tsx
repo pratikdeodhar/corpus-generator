@@ -23,6 +23,7 @@ interface ResultsDisplayProps {
   years: number;
   existingAmount: number;
   inflation: number;
+  stepUp: number;
   targetCorpus: number;
 }
 
@@ -33,13 +34,25 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   years,
   existingAmount,
   inflation,
+  stepUp,
   targetCorpus,
 }) => {
   const [customRate, setCustomRate] = useState<number>(10);
   const [showRealValue, setShowRealValue] = useState<boolean>(true);
   
   const selectedRate = customRate / 100;
-  const chartData = generateChartData(monthlyAmount, existingAmount, years, inflation / 100);
+  const stepUpRate = stepUp / 100;
+  
+  const chartData = generateChartData(
+    monthlyAmount, 
+    existingAmount, 
+    years, 
+    inflation / 100, 
+    stepUpRate,
+    mode,
+    targetCorpus,
+    selectedRate
+  );
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -60,6 +73,10 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     }
     return null;
   };
+
+  const initialMonthlyNeeded = mode === 'goal' 
+    ? calculateRequiredMonthly(targetCorpus, existingAmount, years, selectedRate, stepUpRate)
+    : monthlyAmount;
 
   return (
     <div className="results-display">
@@ -110,26 +127,31 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
           <>
             <div className="result-card primary">
               <span className="rate-label">Nominal Corpus (@ {customRate}%)</span>
-              <span className="corpus-value">{formatCurrency(calculateCorpus(monthlyAmount, existingAmount, years, selectedRate).nominalValue, currency)}</span>
+              <span className="corpus-value">{formatCurrency(calculateCorpus(monthlyAmount, existingAmount, years, selectedRate, 0, stepUpRate).nominalValue, currency)}</span>
             </div>
             {inflation > 0 && showRealValue && (
               <div className="result-card real">
                 <span className="rate-label">Real Value (Inflation Adjusted)</span>
-                <span className="corpus-value">{formatCurrency(calculateCorpus(monthlyAmount, existingAmount, years, selectedRate, inflation / 100).realValue, currency)}</span>
+                <span className="corpus-value">{formatCurrency(calculateCorpus(monthlyAmount, existingAmount, years, selectedRate, inflation / 100, stepUpRate).realValue, currency)}</span>
               </div>
             )}
           </>
         ) : (
           <div className="result-card primary">
-            <span className="rate-label">Monthly Needed (@ {customRate}%)</span>
-            <span className="corpus-value">{formatCurrency(calculateRequiredMonthly(targetCorpus, existingAmount, years, selectedRate), currency)}</span>
+            <span className="rate-label">Initial Monthly Needed (@ {customRate}%)</span>
+            <div className="value-group">
+              <span className="corpus-value">{formatCurrency(initialMonthlyNeeded, currency)}</span>
+              {stepUp > 0 && (
+                <span className="step-up-subtext">+ {stepUp}% annual step-up</span>
+              )}
+            </div>
           </div>
         )}
       </div>
 
       <div className="chart-container">
         <div className="chart-header">
-          <h4>Visualizing the Compounding Gap</h4>
+          <h4>{mode === 'projection' ? 'Visualizing the Compounding Gap' : `Trajectory to reach ${formatCurrency(targetCorpus, currency)}`}</h4>
         </div>
         <div style={{ width: '100%', height: 350 }}>
           <ResponsiveContainer>
@@ -146,6 +168,10 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                 <linearGradient id="color12" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.6}/>
                   <stop offset="95%" stopColor="#4f46e5" stopOpacity={0}/>
+                </linearGradient>
+                <linearGradient id="colorCustom" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#6366f1" stopOpacity={0.6}/>
+                  <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
                 </linearGradient>
                 <linearGradient id="colorReal" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#10b981" stopOpacity={0.4}/>
@@ -191,6 +217,17 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                 strokeWidth={3}
                 dot={false}
               />
+              {customRate !== 8 && customRate !== 10 && customRate !== 12 && (
+                <Area 
+                  name={`${customRate}% Return`}
+                  type="monotone" 
+                  dataKey="rate_custom" 
+                  stroke="#6366f1" 
+                  fill="url(#colorCustom)" 
+                  strokeWidth={3}
+                  dot={false}
+                />
+              )}
               {inflation > 0 && showRealValue && (
                 <Area 
                   name="Real Value (10%)"
